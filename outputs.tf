@@ -64,5 +64,5 @@ output "public_key_openssh" {
 }
 
 output "ssh_key_name" {
-  value = aws_key_pair.main[0].key_name
+  value = var.ssh_key_name != "" ? var.ssh_key_name : aws_key_pair.main[0].key_name
 }
