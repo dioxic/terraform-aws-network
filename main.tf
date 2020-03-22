@@ -42,10 +42,19 @@ data "template_file" "shell_install" {
   }
 }
 
-module "ssh_keypair_aws" {
-  source = "github.com/hashicorp-modules/ssh-keypair-aws"
-  create = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == ""
-  name   = var.name
+module "tls_private_key" {
+  source = "github.com/dioxic/terraform-aws-tls-private-key"
+
+  create    = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == ""
+  name      = var.name
+  rsa_bits  = 2048
+}
+
+resource "aws_key_pair" "main" {
+  count = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == ""
+
+  key_name_prefix = "${module.tls_private_key.private_key_name}-"
+  public_key      = module.tls_private_key.public_key_openssh
 }
 
 module "vpc" {
