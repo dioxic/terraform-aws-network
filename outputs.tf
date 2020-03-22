@@ -40,29 +40,29 @@ output "bastion_public_ip" {
 }
 
 output "bastion_username" {
-  value = "${lookup(var.users, var.os)}"
+  value = lookup(var.users, var.os)
 }
 
 output "private_key_name" {
-  value = "${module.ssh_keypair_aws.private_key_name}"
+  value = module.tls_private_key.private_key_name
 }
 
 output "private_key_filename" {
-  value = "${module.ssh_keypair_aws.private_key_filename}"
+  value = module.tls_private_key.private_key_filename
 }
 
 output "private_key_pem" {
-  value = "${module.ssh_keypair_aws.private_key_pem}"
+  value = module.tls_private_key.private_key_pem
 }
 
 output "public_key_pem" {
-  value = "${module.ssh_keypair_aws.public_key_pem}"
+  value = module.tls_private_key.public_key_pem
 }
 
 output "public_key_openssh" {
-  value = "${module.ssh_keypair_aws.public_key_openssh}"
+  value = module.tls_private_key.public_key_openssh
 }
 
 output "ssh_key_name" {
-  value = "${module.ssh_keypair_aws.name}"
+  value = aws_key_pair.main.key_name
 }
