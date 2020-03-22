@@ -51,7 +51,7 @@ module "tls_private_key" {
 }
 
 resource "aws_key_pair" "main" {
-  count = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == ""
+  count = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == "" ? 1 : 0
 
   key_name_prefix = "${module.tls_private_key.private_key_name}-"
   public_key      = module.tls_private_key.public_key_openssh
@@ -99,7 +99,7 @@ module "bastion" {
 
   ami                    = var.image_id != "" ? var.image_id : data.aws_ami.base.id
   instance_type          = var.instance_type
-  key_name               = var.ssh_key_name != "" ? var.ssh_key_name : module.ssh_keypair_aws.name
+  key_name               = var.ssh_key_name != "" ? var.ssh_key_name : aws_key_pair.main[0].key_name
   vpc_security_group_ids = [module.bastion_sg.this_security_group_id]
   subnet_ids             = module.vpc.public_subnets
   use_num_suffix         = true
