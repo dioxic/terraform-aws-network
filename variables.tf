@@ -100,6 +100,11 @@ variable "private_key_file" {
   default     = ""
 }
 
+variable "bastion_domain_name" {
+  description = "The domain name for the hostname"
+  default     = ""
+}
+
 variable "os" {
   description = "Operating System (e.g. RHEL or Ubuntu), defaults to \"RHEL\"."
   default     = "RHEL"

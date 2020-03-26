@@ -25,15 +25,6 @@ data "aws_ami" "base" {
   }
 }
 
-data "template_file" "repo_install" {
-  template = "${file("${path.module}/templates/install-repo.sh.tpl")}"
-
-  vars = {
-    mongodb_version   = "${var.mongodb_version}"
-    mongodb_community = "${var.mongodb_community}"
-  }
-}
-
 data "template_file" "shell_install" {
   template = "${file("${path.module}/templates/install-shell.sh.tpl")}"
 
@@ -42,16 +33,41 @@ data "template_file" "shell_install" {
   }
 }
 
+data "template_file" "set_hostname" {
+  template = "${file("${path.module}/templates/set-hostname.sh.tpl")}"
+
+  vars = {
+    hostname = "${var.mongodb_community}"
+  }
+}
+
+locals {
+  create_bastion = var.create && (var.bastion_count > 0 || var.bastion_count == -1)
+  install_repo   = templatefile("${path.module}/templates/install-repo.sh.tpl",
+    {
+      mongodb_version   = "${var.mongodb_version}",
+      mongodb_community = "${var.mongodb_community}"
+    }
+  )
+  install_shell  = templatefile("${path.module}/templates/install-shell.sh.tpl",
+    {
+      mongodb_version   = "${var.mongodb_version}",
+      mongodb_community = "${var.mongodb_community}"
+    }
+  )
+}
+
+
 module "tls_private_key" {
   source = "github.com/dioxic/terraform-aws-tls-private-key"
 
-  create    = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == ""
+  create    = local.create_bastion && var.ssh_key_name == ""
   name      = var.name
   rsa_bits  = 2048
 }
 
 resource "aws_key_pair" "main" {
-  count = var.create && (var.bastion_count > 0 || var.bastion_count == -1) && var.ssh_key_name == "" ? 1 : 0
+  count = local.create_bastion && var.ssh_key_name == "" ? 1 : 0
 
   key_name_prefix = "${module.tls_private_key.private_key_name}-"
   public_key      = module.tls_private_key.public_key_openssh
@@ -78,7 +94,7 @@ module "vpc" {
 module "bastion_sg" {
   source  = "terraform-aws-modules/security-group/aws"
   version = "~> 3.0"
-  create  = var.create && (var.bastion_count > 0 || var.bastion_count == -1)
+  create  = local.create_bastion
 
   name        = format("%s-%s", var.name, "bastion")
   vpc_id      = var.create_vpc ? module.vpc.vpc_id : var.vpc_id
@@ -90,23 +106,28 @@ module "bastion_sg" {
   tags = var.tags
 }
 
-module "bastion" {
-  source                 = "terraform-aws-modules/ec2-instance/aws"
-  version                = "~> 2.0"
-
-  name                   = format("%s-%s", var.name, "bastion")
-  instance_count         = var.create && var.bastion_count != -1 ? var.bastion_count : var.create ? length(var.vpc_cidrs_public) : 0
+resource "aws_instance" "bastion" {
+  count = var.create && var.bastion_count != -1 ? var.bastion_count : var.create ? length(module.vpc.public_subnets) : 0
 
   ami                    = var.image_id != "" ? var.image_id : data.aws_ami.base.id
   instance_type          = var.instance_type
   key_name               = var.ssh_key_name != "" ? var.ssh_key_name : aws_key_pair.main[0].key_name
   vpc_security_group_ids = [module.bastion_sg.this_security_group_id]
-  subnet_ids             = module.vpc.public_subnets
-  use_num_suffix         = true
+  subnet_id              = element(
+    module.vpc.public_subnets,
+    count.index,
+  )
+
   user_data              = <<EOF
-${data.template_file.repo_install.rendered} # Runtime install mongodb package repo
-${data.template_file.shell_install.rendered} # Runtime install mongodb shell
+${local.install_repo}  # Runtime install mongodb package repo
+${local.install_shell} # Runtime install mongodb shell
+templatefile("${path.module}/templates/install-repo.sh.tpl", { hostname = format("%s-%s-%d.%s", var.name, "bastion", var.bastion_domain_name)})
 EOF
 
-  tags = var.tags
+  tags = merge(
+    {
+      "Name" = format("%s-%s-%d", var.name, "bastion", count.index + 1)
+    },
+    var.tags
+  )
 }

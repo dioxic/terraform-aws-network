@@ -16,7 +16,7 @@ hosts with your public key.
   ${format("$ ssh-add %s", var.private_key_file == "" ? module.tls_private_key.private_key_filename : var.private_key_file)}
 The public part of the key loaded into the agent ("public_key_openssh" output)
 has been placed on the target system in ~/.ssh/authorized_keys.
-  ${join("", formatlist("\n  $ ssh -A -i %s %s@%s\n", var.private_key_file == "" ? module.tls_private_key.private_key_filename : var.private_key_file, lookup(var.users, var.os), module.bastion.public_ip))}${var.private_key_file == "" ?
+  ${join("", formatlist("\n  $ ssh -A -i %s %s@%s\n", var.private_key_file == "" ? module.tls_private_key.private_key_filename : var.private_key_file, lookup(var.users, var.os), aws_instance.bastion.*.public_ip))}${var.private_key_file == "" ?
 "\nTo force the generation of a new key, the private key instance can be \"tainted\" \n using the below command if the private key was not overridden. \n $ terraform taint -module=network_aws.tls_private_key \\\n      tls_private_key.key"
 :
 "\nThe SSH key was generated outside of this module and overridden."}
@@ -36,7 +36,7 @@ output "bastion_security_group" {
 }
 
 output "bastion_public_ip" {
-  value = module.bastion.public_ip
+  value = aws_instance.bastion.*.public_ip
 }
 
 output "bastion_username" {
