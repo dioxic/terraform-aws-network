@@ -43,7 +43,7 @@ distro_major_version=`echo "$distro_version" | sed 's/\..*//'`
 
 
 ###  Get distribution info
-if [[ ${mongodb_community} == true ]]; then
+if [[ ${mongodb_community} ]]; then
 	mongodb_repo="repo.mongodb.org"
 	mongodb_package="mongodb-org"
 else

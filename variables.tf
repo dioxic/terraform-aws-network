@@ -100,8 +100,25 @@ variable "private_key_file" {
   default     = ""
 }
 
-variable "bastion_domain_name" {
-  description = "The domain name for the hostname"
+variable "domain_name" {
+  description = "The hosted zone domain"
+  default     = ""
+}
+
+variable "subnet_ids" {
+  description = "Subnet ids for the bastion server(s). Required if `bastion_count` > 0 and `create_vpc` is false."
+  type        = list(string)
+  default     = []
+}
+
+variable "create_zone" {
+  description = "Create route53 private hosted zone"
+  type        = bool
+  default     = true
+}
+
+variable "zone_id" {
+  description = "Existing route53 private host zone id"
   default     = ""
 }
 

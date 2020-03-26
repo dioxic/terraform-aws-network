@@ -25,36 +25,10 @@ data "aws_ami" "base" {
   }
 }
 
-data "template_file" "shell_install" {
-  template = "${file("${path.module}/templates/install-shell.sh.tpl")}"
-
-  vars = {
-    mongodb_community = "${var.mongodb_community}"
-  }
-}
-
-data "template_file" "set_hostname" {
-  template = "${file("${path.module}/templates/set-hostname.sh.tpl")}"
-
-  vars = {
-    hostname = "${var.mongodb_community}"
-  }
-}
-
 locals {
   create_bastion = var.create && (var.bastion_count > 0 || var.bastion_count == -1)
-  install_repo   = templatefile("${path.module}/templates/install-repo.sh.tpl",
-    {
-      mongodb_version   = "${var.mongodb_version}",
-      mongodb_community = "${var.mongodb_community}"
-    }
-  )
-  install_shell  = templatefile("${path.module}/templates/install-shell.sh.tpl",
-    {
-      mongodb_version   = "${var.mongodb_version}",
-      mongodb_community = "${var.mongodb_community}"
-    }
-  )
+  vpc_id         = var.create_vpc ? module.vpc.vpc_id : var.vpc_id
+  subnet_ids     = var.create_vpc ? module.vpc.public_subnets : var.subnet_ids
 }
 
 
@@ -97,7 +71,7 @@ module "bastion_sg" {
   create  = local.create_bastion
 
   name        = format("%s-%s", var.name, "bastion")
-  vpc_id      = var.create_vpc ? module.vpc.vpc_id : var.vpc_id
+  vpc_id      = local.vpc_id
 
   ingress_cidr_blocks = ["0.0.0.0/0"]
   ingress_rules       = ["ssh-tcp", "all-icmp"]
@@ -107,21 +81,34 @@ module "bastion_sg" {
 }
 
 resource "aws_instance" "bastion" {
-  count = var.create && var.bastion_count != -1 ? var.bastion_count : var.create ? length(module.vpc.public_subnets) : 0
+  count = var.create && var.bastion_count != -1 ? var.bastion_count : var.create ? length(local.subnet_ids) : 0
 
   ami                    = var.image_id != "" ? var.image_id : data.aws_ami.base.id
   instance_type          = var.instance_type
   key_name               = var.ssh_key_name != "" ? var.ssh_key_name : aws_key_pair.main[0].key_name
   vpc_security_group_ids = [module.bastion_sg.this_security_group_id]
   subnet_id              = element(
-    module.vpc.public_subnets,
+    local.subnet_ids,
     count.index,
   )
 
   user_data              = <<EOF
-${local.install_repo}  # Runtime install mongodb package repo
-${local.install_shell} # Runtime install mongodb shell
-templatefile("${path.module}/templates/install-repo.sh.tpl", { hostname = format("%s-%s-%d.%s", var.name, "bastion", var.bastion_domain_name)})
+${templatefile("${path.module}/templates/install-repo.sh.tpl",
+  {
+    mongodb_version   = var.mongodb_version,
+    mongodb_community = var.mongodb_community
+  }
+)}
+${templatefile("${path.module}/templates/install-shell.sh.tpl",
+  {
+    mongodb_community = var.mongodb_community
+  }
+)}
+${templatefile("${path.module}/templates/set-hostname.sh.tpl",
+  {
+    hostname = var.domain_name != "" ? format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name) : format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name)
+  }
+)}
 EOF
 
   tags = merge(
@@ -130,4 +117,26 @@ EOF
     },
     var.tags
   )
+}
+
+resource "aws_route53_zone" "private" {
+  count = var.create_zone && var.zone_id == "" && var.domain_name != "" ? 1 : 0
+
+  name = var.domain_name
+
+  vpc {
+    vpc_id = local.vpc_id
+  }
+
+  tags = var.tags
+}
+
+resource "aws_route53_record" "bastion" {
+  count   = var.create_zone && var.domain_name != "" ? length(aws_instance.bastion) : 0
+
+  zone_id = var.zone_id != "" ? var.zone_id : aws_route53_zone.private[0].zone_id
+  name    = format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name)
+  type    = "A"
+  ttl     = "300"
+  records = [aws_instance.bastion[count.index].private_ip]
 }

@@ -13,30 +13,30 @@ APT_GET=$(which apt-get 2>/dev/null)
 ZYPPER=$(which zypper 2>/dev/null)
 
 if [[ ! -z $YUM ]]; then
-  echo "RHEL/CentOS system detected"
-  echo "Performing updates and installing prerequisites"
-  sudo yum -y check-update
-	sudo yum -y update
-
-  echo "Installing MongoDB packages"
-  sudo yum install -y $mongodb_package-shell $mongodb_package-tools
-elif [[ ! -z $APT_GET ]]; then
-  echo "Debian/Ubuntu system detected"
-  echo "Performing updates and installing prerequisites"
-  sudo apt-get -y update
+	echo "RHEL/CentOS system detected"
+	echo "Performing updates and installing prerequisites"
+	sudo yum -y -q check-update
+	sudo yum -y -q update
 
 	echo "Installing MongoDB packages"
-	sudo apt-get -y $mongodb_package-shell $mongodb_package-tools
+	sudo yum install -y -q $mongodb_package-shell $mongodb_package-tools
+elif [[ ! -z $APT_GET ]]; then
+	echo "Debian/Ubuntu system detected"
+	echo "Performing updates and installing prerequisites"
+	sudo apt-get -qq update
+
+	echo "Installing MongoDB packages"
+	sudo apt-get -qq $mongodb_package-shell $mongodb_package-tools
 elif [[ ! -z $ZYPPER ]]; then
-  echo "SUSE system detected"
-  echo "Performing updates and installing prerequisites"
-  sudo zypper -n update
+	echo "SUSE system detected"
+	echo "Performing updates and installing prerequisites"
+	sudo zypper -n update
 
 	echo "Installing MongoDB packages"
 	sudo zypper -n install $mongodb_package-shell $mongodb_package-tools
 else
-  echo "Prerequisites not installed due to OS detection failure"
-  exit 1;
+	echo "Prerequisites not installed due to OS detection failure"
+	exit 1;
 fi
 
 echo "Install complete"
