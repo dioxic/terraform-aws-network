@@ -93,6 +93,11 @@ resource "aws_instance" "bastion" {
   )
 
   user_data              = <<EOF
+${templatefile("${path.module}/templates/set-hostname.sh.tpl",
+  {
+    hostname = var.domain_name != "" ? format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name) : format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name)
+  }
+)}
 ${templatefile("${path.module}/templates/install-repo.sh.tpl",
   {
     mongodb_version   = var.mongodb_version,
@@ -102,11 +107,6 @@ ${templatefile("${path.module}/templates/install-repo.sh.tpl",
 ${templatefile("${path.module}/templates/install-shell.sh.tpl",
   {
     mongodb_community = var.mongodb_community
-  }
-)}
-${templatefile("${path.module}/templates/set-hostname.sh.tpl",
-  {
-    hostname = var.domain_name != "" ? format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name) : format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name)
   }
 )}
 EOF
