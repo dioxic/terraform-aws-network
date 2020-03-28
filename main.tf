@@ -57,7 +57,7 @@ module "vpc" {
   private_subnets = var.vpc_cidrs_private
   public_subnets  = var.vpc_cidrs_public
 
-  enable_nat_gateway     = var.single_nat_gateway
+  enable_nat_gateway     = true
   one_nat_gateway_per_az = var.one_nat_gateway_per_az
   single_nat_gateway     = var.single_nat_gateway
 
