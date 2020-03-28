@@ -43,6 +43,14 @@ output "bastion_username" {
   value = lookup(var.users, var.os)
 }
 
+output "private_subnets" {
+  value = module.vpc.private_subnets
+}
+
+output "public_subnets" {
+  value = module.vpc.public_subnets
+}
+
 output "private_key_name" {
   value = module.tls_private_key.private_key_name
 }

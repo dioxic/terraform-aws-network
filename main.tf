@@ -1,11 +1,10 @@
 terraform {
-  required_version = ">= 0.12.11"
+  required_version = ">= 0.12.20"
 }
 
 data "aws_availability_zones" "main" {}
 
 data "aws_ami" "base" {
-  #count       = "${var.create && var.image_id == "" && var.bastion_count > 0 ? 1 : 0}"
   most_recent = true
   owners      = ["${var.ami_owner}"]
 
