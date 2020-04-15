@@ -132,7 +132,7 @@ resource "aws_route53_zone" "private" {
 }
 
 resource "aws_route53_record" "bastion" {
-  count   = var.create_zone && var.domain_name != "" ? length(aws_instance.bastion) : 0
+  count   = length(aws_route53_zone.private) >0 ? length(aws_instance.bastion) : 0
 
   zone_id = var.zone_id != "" ? var.zone_id : aws_route53_zone.private[0].zone_id
   name    = format("%s-%s-%d.%s", var.name, "bastion", count.index + 1, var.domain_name)

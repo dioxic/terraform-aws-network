@@ -71,6 +71,10 @@ output "public_key_openssh" {
   value = module.tls_private_key.public_key_openssh
 }
 
+output "zone_id" {
+  value = aws_route53_zone.private[0].zone_id
+}
+
 output "ssh_key_name" {
   value = var.ssh_key_name != "" ? var.ssh_key_name : aws_key_pair.main[0].key_name
 }
