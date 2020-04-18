@@ -31,7 +31,7 @@ output "vpc_id" {
   value = var.create_vpc ? module.vpc.vpc_id : var.vpc_id
 }
 
-output "bastion_security_group" {
+output "bastion_security_group_id" {
   value = module.bastion_sg.this_security_group_id
 }
 
