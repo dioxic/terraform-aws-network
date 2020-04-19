@@ -1,9 +1,3 @@
-variable "create" {
-  description = "Create Module, defaults to true."
-  type        = bool
-  default     = true
-}
-
 variable "name" {
   description = "Name for resources, defaults to \"network-aws\"."
   default     = "network-aws"
@@ -11,6 +5,30 @@ variable "name" {
 
 variable "create_vpc" {
   description = "Determines whether a VPC should be created or if a VPC ID will be passed in."
+  type        = bool
+  default     = true
+}
+
+variable "create_zone" {
+  description = "Create route53 private hosted zone, defaults to `false`"
+  type        = bool
+  default     = false
+}
+
+variable "create_bastion" {
+  description = "Create bastion host flag, defaults to `true`"
+  type        = bool
+  default     = true
+}
+
+variable "create_public_subnets" {
+  description = "Create public subnets if `vpc_cidrs_public` is not provided, defaults to `true`"
+  type        = bool
+  default     = true
+}
+
+variable "create_private_subnets" {
+  description = "Create private subnets if `vpc_cidrs_private` is not provided, defaults to `true`"
   type        = bool
   default     = true
 }
@@ -26,9 +44,39 @@ variable "vpc_cidr" {
 }
 
 variable "vpc_cidrs_public" {
-  description = "VPC CIDR blocks for public subnets, defaults to \"10.0.1.0/24\", \"10.0.2.0/24\", and \"10.0.3.0/24\"."
+  description = "VPC CIDR blocks for public subnets."
   type        = list(string)
-  default     = ["10.0.1.0/24", "10.0.2.0/24", "10.0.3.0/24",]
+  default     = []
+}
+
+variable "vpc_cidrs_private" {
+  description = "VPC CIDR blocks for private subnets."
+  type        = list(string)
+  default     = []
+}
+
+variable "vpc_cidr_prefix_length_public" {
+  description = "CIDR prefix length for calculating public subnet, defaults to `8`."
+  type        = number
+  default     = 8
+}
+
+variable "vpc_cidr_prefix_length_private" {
+  description = "CIDR prefix length for calculating private subnet, defaults to `8`."
+  type        = number
+  default     = 8
+}
+
+variable "vpc_cidr_offset_public" {
+  description = "Offset for public subnet, defaults to `0`"
+  type        = number
+  default     = 0
+}
+
+variable "vpc_cidr_offset_private" {
+  description = "Offset for private subnet, defaults to `10`"
+  type        = number
+  default     = 10
 }
 
 variable "single_nat_gateway" {
@@ -43,20 +91,10 @@ variable "one_nat_gateway_per_az" {
   default     = false
 }
 
-variable "vpc_cidrs_private" {
-  description = "VPC CIDR blocks for private subnets, defaults to \"10.0.11.0/24\", \"10.0.12.0/24\", and \"10.0.13.0/24\"."
-  type        = list(string)
-  default     = ["10.0.11.0/24", "10.0.12.0/24", "10.0.13.0/24",]
-}
-
-variable "ami_owner" {
-  description = "Account ID of AMI owner."
-  default     = "amazon"
-}
-
-variable "ami_name" {
-  description = "Machine image name."
-  default     = "amzn2-ami-hvm-*-x86_64-gp2"
+variable "enable_nat_gateway" {
+  description = "Should be true if you want to provision NAT Gateways for each of your private networks"
+  type        = bool
+  default     = false
 }
 
 variable "mongodb_version" {
@@ -75,18 +113,18 @@ variable "bastion_count" {
   default     = -1
 }
 
-variable "image_id" {
-  description = "AMI to use, defaults to amazon linux 2 latest."
+variable "bastion_ami" {
+  description = "AMI to use for bastion host. Required."
   default     = ""
 }
 
-variable "instance_type" {
+variable "bastion_instance_type" {
   description = "AWS instance type for bastion host (e.g. m4.large), defaults to \"t2.micro\"."
   default     = "t2.micro"
 }
 
 variable "user_data" {
-  description = "user_data script to pass in at runtime."
+  description = "user_data script to pass in at runtime for bastion host."
   default     = ""
 }
 
@@ -100,8 +138,8 @@ variable "private_key_file" {
   default     = ""
 }
 
-variable "domain_name" {
-  description = "The hosted zone domain"
+variable "zone_domain" {
+  description = "The hosted zone domain name. Required if create_zone is `true`"
   default     = ""
 }
 
@@ -111,35 +149,29 @@ variable "subnet_ids" {
   default     = []
 }
 
-variable "create_zone" {
-  description = "Create route53 private hosted zone"
-  type        = bool
-  default     = true
-}
-
 variable "zone_id" {
   description = "Existing route53 private host zone id"
   default     = ""
 }
 
-variable "os" {
-  description = "Operating System (e.g. RHEL or Ubuntu), defaults to \"RHEL\"."
-  default     = "RHEL"
-}
+# variable "os" {
+#   description = "Operating System (e.g. RHEL or Ubuntu), defaults to \"RHEL\"."
+#   default     = "RHEL"
+# }
 
-variable "os_version" {
-  description = "Operating System version (e.g. 7.3 for RHEL or 16.04 for Ubuntu), defaults to \"7.3\"."
-  default     = "7.3"
-}
+# variable "os_version" {
+#   description = "Operating System version (e.g. 7.3 for RHEL or 16.04 for Ubuntu), defaults to \"7.3\"."
+#   default     = "7.3"
+# }
 
-variable "users" {
-  description = "Map of SSH users."
+# variable "users" {
+#   description = "Map of SSH users."
 
-  default = {
-    RHEL   = "ec2-user"
-    Ubuntu = "ubuntu"
-  }
-}
+#   default = {
+#     RHEL   = "ec2-user"
+#     Ubuntu = "ubuntu"
+#   }
+# }
 
 variable "tags" {
   description = "Optional map of tags to set on resources, defaults to empty map."
