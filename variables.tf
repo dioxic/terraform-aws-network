@@ -113,7 +113,7 @@ variable "bastion_count" {
   default     = -1
 }
 
-variable "bastion_ami" {
+variable "bastion_image_id" {
   description = "AMI to use for bastion host. Required."
   default     = ""
 }

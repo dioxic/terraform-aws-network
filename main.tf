@@ -105,7 +105,7 @@ resource "aws_security_group_rule" "ssh" {
 resource "aws_instance" "bastion" {
   for_each = { for o in local.bastions : o.name => o }
 
-  ami                    = var.bastion_ami
+  ami                    = var.bastion_image_id
   instance_type          = var.bastion_instance_type
   key_name               = var.ssh_key_name != "" ? var.ssh_key_name : aws_key_pair.main[0].key_name
   vpc_security_group_ids = [aws_security_group.bastion[0].id]
