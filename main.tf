@@ -7,7 +7,7 @@ data "aws_availability_zones" "main" {}
 locals {
   create_bastion     = var.create_bastion && var.bastion_count != 0
   create_zone        = var.create_zone && var.zone_id == "" && var.zone_domain != ""
-  create_vpc         = var.create_vpc && var.vpc_id == "" && var.subnet_ids == ""
+  create_vpc         = var.create_vpc && var.vpc_id == "" && length(var.subnet_ids) == 0
   bastion_count      = !local.create_bastion ? 0 : var.bastion_count > -1 ? var.bastion_count : length(local.subnet_ids)
   vpc_id             = local.create_vpc ? module.vpc.vpc_id : var.vpc_id
   subnet_ids         = local.create_vpc ? module.vpc.public_subnets : var.subnet_ids
