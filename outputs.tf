@@ -40,7 +40,7 @@ output "vpc_cidrs_private" {
 }
 
 output "bastion_security_group_id" {
-  value = try(aws_security_group.bastion[0].id, null)
+  value = var.create_bastion ? aws_security_group.bastion[0].id : null
 }
 
 output "bastion_public_ip" {
