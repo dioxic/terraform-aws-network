@@ -102,45 +102,46 @@ variable "mongodb_version" {
   default     = "4.2"
 }
 
-variable "mongodb_community" {
-  description = "MongoDB community version, defaults to false."
+variable "enterprise_binaries" {
+  description = "MongoDB Enterprise version, defaults to `false`."
   type        = bool
   default     = false
 }
 
 variable "bastion_count" {
   description = "Number of bastion hosts to provision across public subnets, defaults to public subnet count."
-  default     = -1
+  type        = number
+  default     = null
 }
 
 variable "bastion_image_id" {
-  description = "AMI to use for bastion host. Required."
-  default     = ""
+  description = "AMI to use for bastion host. Required if `create_bastion` is true."
+  default     = null
 }
 
 variable "bastion_instance_type" {
-  description = "AWS instance type for bastion host (e.g. m4.large), defaults to \"t2.micro\"."
-  default     = "t2.micro"
+  description = "AWS instance type for bastion host (e.g. m4.large), defaults to \"t3.micro\"."
+  default     = "t3.micro"
 }
 
 variable "user_data" {
   description = "user_data script to pass in at runtime for bastion host."
-  default     = ""
+  default     = null
 }
 
 variable "ssh_key_name" {
   description = "AWS key name you will use to access the Bastion host instance(s), defaults to generating an SSH key for you."
-  default     = ""
+  default     = null
 }
 
 variable "private_key_file" {
   description = "Private key filename for AWS key passed in, defaults to empty."
-  default     = ""
+  default     = null
 }
 
-variable "zone_domain" {
+variable "domain_name" {
   description = "The hosted zone domain name. Required if create_zone is `true`"
-  default     = ""
+  default     = null
 }
 
 variable "subnet_ids" {

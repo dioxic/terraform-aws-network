@@ -24,11 +24,11 @@
 # }
 
 output "vpc_cidr" {
-  value = var.create_vpc ? module.vpc.vpc_cidr_block : var.vpc_cidr
+  value = var.vpc_cidr
 }
 
 output "vpc_id" {
-  value = var.create_vpc ? module.vpc.vpc_id : var.vpc_id
+  value = local.vpc_id
 }
 
 output "vpc_cidrs_public" {
@@ -40,11 +40,11 @@ output "vpc_cidrs_private" {
 }
 
 output "bastion_security_group_id" {
-  value = length(aws_security_group.bastion) > 0 ? aws_security_group.bastion[0].id : ""
+  value = try(aws_security_group.bastion[0].id, null)
 }
 
 output "bastion_public_ip" {
-  value = [for v in aws_instance.bastion: v.public_ip]
+  value = values(aws_instance.bastion)[*].public_ip
 }
 
 output "private_subnets" {

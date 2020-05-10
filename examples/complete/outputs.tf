@@ -14,6 +14,6 @@ output "vpc_cidrs_private" {
   value = module.network.vpc_cidrs_private
 }
 
-output "bastion_config" {
-  value = module.network.bastion_config
+output "bastion_public_ip" {
+  value = module.network.bastion_public_ip
 }
